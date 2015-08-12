@@ -84,7 +84,7 @@ if any(degs==0)
 end
 
 if issparse(A)
-  D_1 = spdiags(1./degs); % The generalized outdegree matrix
+  D_1 = spdiags(1./degs,0,n,n); % The generalized outdegree matrix
 else
   D_1 = diag(1./degs);
 end
