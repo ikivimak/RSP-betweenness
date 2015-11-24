@@ -1,4 +1,4 @@
-function bets = RSPNBC(A,betas,normalized,exclude_st,C,is_directed)
+function bets = RSPNBC(A,betas,normalized,exclude_st,C,is_directed,print_prog)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FUNCTION bets = RSPNBC(A,betas,normalized,exclude_st,C)
@@ -30,6 +30,8 @@ function bets = RSPNBC(A,betas,normalized,exclude_st,C,is_directed)
 % 
 % is_directed: If 1, G is considered directed (this is checked by the 
 %              algorithm by default)
+% 
+% print_prog:  If 1, prints a fancy progressbar (default=1, if n>1000) 
 %
 % OUTPUT ARGUMENTS:
 % bets:        The RSP net betweenness vector, or matrix of betweenness
@@ -55,6 +57,12 @@ function bets = RSPNBC(A,betas,normalized,exclude_st,C,is_directed)
 % (c) 2014 I. Kivim\"aki
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
+[n1,n2] = size(A);
+if n1 ~= n2
+    error('Martix A must be square')
+else
+    n = n1;
+end
 
 if nargin < 3
   normalized = 0;
@@ -73,11 +81,8 @@ if nargin < 6
   is_directed = any(any(A ~= A'));
 end
 
-[n1,n2] = size(A);
-if n1 ~= n2
-    error('Martix A must be square')
-else
-    n = n1;
+if nargin < 7
+  print_prog = n>1000;
 end
 
 e = ones(n,1);
@@ -85,7 +90,7 @@ I = eye(size(A)); % Identity matrix
 
 degs = A*e;
 if issparse(A)
-  D_1 = spdiags(1./degs); % The generalized outdegree matrix
+  D_1 = spdiags(1./degs,0,n,n); % The generalized outdegree matrix
 else
   D_1 = diag(1./degs);
 end
@@ -124,6 +129,9 @@ for beta_ind = 1:nbetas
   bet = zeros(n,1);
   
   for i = 1:n
+    if print_prog
+      progressbar(i,n);
+    end
     z_ci = Z(:,i);
     z_ri = Z(i,:);
     
@@ -191,4 +199,28 @@ for beta_ind = 1:nbetas
   end
 
   bets(:,beta_ind) = bet;
+  if print_prog
+    fprintf('\n');
+  end
 end
+
+
+
+function progressbar(m,M)
+if m == 1
+  fprintf('[                    ]');
+else
+  binsize = floor(M/20);
+  div = m/binsize;
+  if div == floor(div)    
+    for i = 1:(20-div+2)
+      fprintf('\b');
+    end
+    fprintf('-');
+    for i = 1:(20-div)
+      fprintf(' ');
+    end
+    fprintf(']');
+  end
+end
+
